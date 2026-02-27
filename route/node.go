@@ -1,6 +1,6 @@
 package route
 
-import "github.com/go-web/public"
+import "github.com/cyuzhe1994-commits/go-web/public"
 
 const name = ""
 

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	go_web "github.com/go-web"
+	go_web "github.com/cyuzhe1994-commits/go-web"
 )
 
 // go test -run TestKernal -v

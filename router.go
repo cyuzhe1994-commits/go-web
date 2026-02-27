@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-web/public"
-	"github.com/go-web/route"
+	"github.com/cyuzhe1994-commits/go-web/public"
+	"github.com/cyuzhe1994-commits/go-web/route"
 )
 
 type Router struct {

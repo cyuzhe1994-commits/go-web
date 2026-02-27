@@ -1,6 +1,6 @@
 package middleware
 
-import "github.com/go-web/public"
+import "github.com/cyuzhe1994-commits/go-web/public"
 
 func Recovery(next public.HandlerFunc) public.HandlerFunc {
 	return func(ctx *public.Context) {

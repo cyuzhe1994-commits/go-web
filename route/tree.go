@@ -3,7 +3,7 @@ package route
 import (
 	"strings"
 
-	"github.com/go-web/public"
+	"github.com/cyuzhe1994-commits/go-web/public"
 )
 
 type Tree struct {
