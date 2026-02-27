@@ -70,28 +70,25 @@ func (r *Router) Delete(path string, handler public.HandlerFunc, middleware ...p
 	r.Add(http.MethodDelete, path, handler, middleware...)
 }
 
-func (r *Router) Handle(w http.ResponseWriter, req *http.Request) {
+func (r *Router) Handle(w http.ResponseWriter, req *http.Request) (handler public.HandlerFunc, ctx *public.Context) {
 	method, path := req.Method, req.URL.Path
+
 	if _, ok := r.trees[method]; !ok {
-		http.NotFound(w, req)
 		return
 	}
 	node := r.trees[method].GetNode(path)
 	if node == nil {
-		http.NotFound(w, req)
 		return
 	}
-	handler := node.GetHandler()
+	handler = node.GetHandler()
 	if handler == nil {
-		http.NotFound(w, req)
 		return
 	}
-	ctx := &public.Context{
+	ctx = &public.Context{
 		Writer:  w,
 		Request: req,
 		Params:  ParamsExtract(node.GetFullPath(), path),
 	}
-	handler(ctx)
 	return
 }
 
