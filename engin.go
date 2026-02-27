@@ -3,18 +3,24 @@ package go_web
 import (
 	"net/http"
 	"time"
+
+	"github.com/go-web/middleware"
 )
 
 // 框架核心结构
 type Engine struct {
 	logger IFrameWorkLog
+	Router *Router
 }
 
 func NewEngine(logger IFrameWorkLog) *Engine {
 	if logger == nil {
 		logger = NewDefaultFrameWorkLog(DefaultFrameWorkLogLevelInfo, time.UTC)
 	}
-	return &Engine{logger: logger}
+	router := NewRouter()
+	router.Use(middleware.Recovery)
+	router.Use(middleware.Logger)
+	return &Engine{logger: logger, Router: router}
 }
 
 func (e *Engine) Run(addr string) (err error) {
@@ -25,5 +31,6 @@ func (e *Engine) Run(addr string) (err error) {
 
 func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	e.logger.Info("收到来自 %s 的请求: %s", r.RemoteAddr, r.URL.Path)
-	// TODO 这里可以添加处理 HTTP 请求的逻辑，例如路由分发等
+	// 这里可以添加处理 HTTP 请求的逻辑，例如路由分发等
+	e.Router.Handle(w, r)
 }
