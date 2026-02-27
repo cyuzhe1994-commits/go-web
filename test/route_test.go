@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	go_web "github.com/go-web"
-	"github.com/go-web/middleware"
-	"github.com/go-web/public"
+	go_web "github.com/cyuzhe1994-commits/go-web"
+	"github.com/cyuzhe1994-commits/go-web/middleware"
+	"github.com/cyuzhe1994-commits/go-web/public"
 )
 
 func routeTest(method string, path string, router *go_web.Router) {
