@@ -3,16 +3,13 @@ package go_web
 import (
 	"net/http"
 	"time"
-
-	"github.com/cyuzhe1994-commits/go-web/middleware"
-	"github.com/cyuzhe1994-commits/go-web/public"
 )
 
 // 框架核心结构
 type Engine struct {
 	logger      IFrameWorkLog
 	Router      *Router
-	middlewares []public.Middleware
+	middlewares []Middleware
 }
 
 func NewEngine(logger IFrameWorkLog) *Engine {
@@ -20,13 +17,11 @@ func NewEngine(logger IFrameWorkLog) *Engine {
 		logger = NewDefaultFrameWorkLog(DefaultFrameWorkLogLevelInfo, time.UTC)
 	}
 	router := NewRouter()
-	middlewares := make([]public.Middleware, 0)
-	middlewares = append(middlewares, middleware.Recovery)
-	middlewares = append(middlewares, middleware.Logger)
-	return &Engine{logger: logger, Router: router}
+	middlewares := make([]Middleware, 0)
+	return &Engine{logger: logger, Router: router, middlewares: middlewares}
 }
 
-func (e *Engine) Use(middleware public.Middleware) {
+func (e *Engine) Use(middleware Middleware) {
 	e.middlewares = append(e.middlewares, middleware)
 }
 
@@ -36,7 +31,7 @@ func (e *Engine) Run(addr string) (err error) {
 	return http.ListenAndServe(addr, e)
 }
 
-func (e *Engine) combineMiddlewares(handler public.HandlerFunc) public.HandlerFunc {
+func (e *Engine) combineMiddlewares(handler HandlerFunc) HandlerFunc {
 	// 从后往前执行，这样最先 Use 的中间件会在最外层执行
 	for i := len(e.middlewares) - 1; i >= 0; i-- {
 		handler = e.middlewares[i](handler)
@@ -49,7 +44,7 @@ func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 这里可以添加处理 HTTP 请求的逻辑，例如路由分发等
 	handler, ctx := e.Router.Handle(w, r)
 	if handler == nil {
-		handler = func(ctx *public.Context) {
+		handler = func(ctx *Context) {
 			ctx.JSON(http.StatusNotFound, map[string]interface{}{
 				"error": "404 not found",
 			})
@@ -57,7 +52,7 @@ func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	finalHandler := e.combineMiddlewares(handler)
 	if ctx == nil {
-		ctx = &public.Context{
+		ctx = &Context{
 			Request: r,
 			Writer:  w,
 		}

@@ -4,11 +4,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/cyuzhe1994-commits/go-web/public"
+	"github.com/cyuzhe1994-commits/go-web"
 )
 
-func Logger(next public.HandlerFunc) public.HandlerFunc {
-	return func(c *public.Context) {
+func Logger(next go_web.HandlerFunc) go_web.HandlerFunc {
+	return func(c *go_web.Context) {
 		// Start timer
 		t := time.Now()
 		// Process request
