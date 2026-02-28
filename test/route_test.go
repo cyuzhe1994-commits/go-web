@@ -10,11 +10,10 @@ import (
 
 	go_web "github.com/cyuzhe1994-commits/go-web"
 	"github.com/cyuzhe1994-commits/go-web/middleware"
-	"github.com/cyuzhe1994-commits/go-web/public"
 )
 
 func routeTest(method string, path string, router *go_web.Router) {
-	router.Add(method, path, func(ctx *public.Context) {
+	router.Add(method, path, func(ctx *go_web.Context) {
 		ctx.Echo(http.StatusOK, method+" "+ctx.Request.URL.Path)
 	})
 }
@@ -56,7 +55,7 @@ func TestRoute(t *testing.T) {
 func TestRouteBindJson(t *testing.T) {
 	engin := go_web.NewEngine(nil)
 	router := engin.Router
-	router.Add(http.MethodPost, "/test/bindjson", func(ctx *public.Context) {
+	router.Add(http.MethodPost, "/test/bindjson", func(ctx *go_web.Context) {
 		type User struct {
 			Name string `json:"name"`
 			Age  int    `json:"age"`
@@ -92,11 +91,14 @@ func TestRouteBindJson(t *testing.T) {
 
 func TestRouteMiddlewarePanic(t *testing.T) {
 	engin := go_web.NewEngine(nil)
+	engin.Use(middleware.Recovery)
+	engin.Use(middleware.Logger)
 	router := engin.Router
 	router.Use(middleware.Cors)
-	router.Get("/healthy", func(ctx *public.Context) {
+	router.Get("/healthy", func(ctx *go_web.Context) {
 		panic("healthy")
 	})
+
 	go engin.Run(":8080")
 	res, err := http.Get("http://localhost:8080/healthy")
 	if err != nil {
@@ -123,15 +125,15 @@ func TestRouteMiddlewareSingleRoute(t *testing.T) {
 	engin := go_web.NewEngine(nil)
 	router := engin.Router
 	router.Use(middleware.Cors)
-	router.Get("/healthy", func(ctx *public.Context) {
+	router.Get("/healthy", func(ctx *go_web.Context) {
 		ctx.Echo(http.StatusOK, "healthy")
-	}, func(next public.HandlerFunc) public.HandlerFunc {
-		return func(c *public.Context) {
+	}, func(next go_web.HandlerFunc) go_web.HandlerFunc {
+		return func(c *go_web.Context) {
 			c.Writer.Header().Set("Single-Middleware", "success")
 			next(c)
 		}
 	})
-	router.Get("/healthy001", func(ctx *public.Context) {
+	router.Get("/healthy001", func(ctx *go_web.Context) {
 		ctx.Echo(http.StatusOK, "healthy001")
 	})
 	go engin.Run(":8080")

@@ -2,8 +2,6 @@ package route
 
 import (
 	"strings"
-
-	"github.com/cyuzhe1994-commits/go-web/public"
 )
 
 type Tree struct {
@@ -15,7 +13,7 @@ func NewTree() *Tree {
 }
 
 // AddRoute 注册路由
-func (r *Tree) AddNode(path string, handler public.HandlerFunc) {
+func (r *Tree) AddNode(path string) *Node {
 	parts := parsePath(path)
 	curr := r.root
 	for _, part := range parts {
@@ -30,8 +28,8 @@ func (r *Tree) AddNode(path string, handler public.HandlerFunc) {
 		curr = curr.children[part]
 	}
 	curr.isEnd = true
-	curr.handler = handler
 	curr.fullPath = path
+	return curr
 }
 
 // Search 搜索路径是否存在

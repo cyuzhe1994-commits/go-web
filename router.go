@@ -4,41 +4,43 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cyuzhe1994-commits/go-web/public"
 	"github.com/cyuzhe1994-commits/go-web/route"
 )
 
 type Router struct {
-	trees      map[string]*route.Tree // 在新建 group 后，树结构是共享的
-	middleware []public.Middleware    // 在新建 group 后，中间件是复制的，保证每个 group 可以独立添加中间件
+	trees      map[string]*route.Tree      // 在新建 group 后，树结构是共享的
+	handlers   map[*route.Node]HandlerFunc // 在新建 group 后，handlers 是共享的，保证每个 group 可以独立添加路由
+	middleware []Middleware                // 在新建 group 后，中间件是复制的，保证每个 group 可以独立添加中间件
 	prefix     string
 }
 
 func NewRouter() *Router {
 	return &Router{
 		trees:      make(map[string]*route.Tree),
-		middleware: make([]public.Middleware, 0),
+		middleware: make([]Middleware, 0),
 		prefix:     "",
+		handlers:   make(map[*route.Node]HandlerFunc),
 	}
 }
 
-func (r *Router) Use(middleware public.Middleware) {
+func (r *Router) Use(middleware Middleware) {
 	r.middleware = append(r.middleware, middleware)
 }
 
 func (r *Router) Group(prefix string) *Router {
 
-	newMiddleware := make([]public.Middleware, len(r.middleware))
+	newMiddleware := make([]Middleware, len(r.middleware))
 	copy(newMiddleware, r.middleware)
 
 	return &Router{
 		trees:      r.trees,
 		middleware: newMiddleware,
+		handlers:   make(map[*route.Node]HandlerFunc),
 		prefix:     r.prefix + prefix,
 	}
 }
 
-func (r *Router) Add(method string, path string, handler public.HandlerFunc, middleware ...public.Middleware) {
+func (r *Router) Add(method string, path string, handler HandlerFunc, middleware ...Middleware) {
 	if _, ok := r.trees[method]; !ok {
 		r.trees[method] = route.NewTree()
 	}
@@ -51,26 +53,27 @@ func (r *Router) Add(method string, path string, handler public.HandlerFunc, mid
 	for i := len(r.middleware) - 1; i >= 0; i-- {
 		finalHandler = r.middleware[i](finalHandler)
 	}
-	r.trees[method].AddNode(r.prefix+path, finalHandler)
+	node := r.trees[method].AddNode(r.prefix + path)
+	r.handlers[node] = finalHandler
 }
 
-func (r *Router) Get(path string, handler public.HandlerFunc, middleware ...public.Middleware) {
+func (r *Router) Get(path string, handler HandlerFunc, middleware ...Middleware) {
 	r.Add(http.MethodGet, path, handler, middleware...)
 }
 
-func (r *Router) Post(path string, handler public.HandlerFunc, middleware ...public.Middleware) {
+func (r *Router) Post(path string, handler HandlerFunc, middleware ...Middleware) {
 	r.Add(http.MethodPost, path, handler, middleware...)
 }
 
-func (r *Router) Put(path string, handler public.HandlerFunc, middleware ...public.Middleware) {
+func (r *Router) Put(path string, handler HandlerFunc, middleware ...Middleware) {
 	r.Add(http.MethodPut, path, handler, middleware...)
 }
 
-func (r *Router) Delete(path string, handler public.HandlerFunc, middleware ...public.Middleware) {
+func (r *Router) Delete(path string, handler HandlerFunc, middleware ...Middleware) {
 	r.Add(http.MethodDelete, path, handler, middleware...)
 }
 
-func (r *Router) Handle(w http.ResponseWriter, req *http.Request) (handler public.HandlerFunc, ctx *public.Context) {
+func (r *Router) Handle(w http.ResponseWriter, req *http.Request) (handler HandlerFunc, ctx *Context) {
 	method, path := req.Method, req.URL.Path
 
 	if _, ok := r.trees[method]; !ok {
@@ -80,11 +83,11 @@ func (r *Router) Handle(w http.ResponseWriter, req *http.Request) (handler publi
 	if node == nil {
 		return
 	}
-	handler = node.GetHandler()
+	handler = r.handlers[node]
 	if handler == nil {
 		return
 	}
-	ctx = &public.Context{
+	ctx = &Context{
 		Writer:  w,
 		Request: req,
 		Params:  ParamsExtract(node.GetFullPath(), path),

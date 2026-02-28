@@ -1,4 +1,4 @@
-package public
+package go_web
 
 type HandlerFunc func(*Context)
 
