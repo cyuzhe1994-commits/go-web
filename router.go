@@ -35,7 +35,7 @@ func (r *Router) Group(prefix string) *Router {
 	return &Router{
 		trees:      r.trees,
 		middleware: newMiddleware,
-		handlers:   make(map[*route.Node]HandlerFunc),
+		handlers:   r.handlers,
 		prefix:     r.prefix + prefix,
 	}
 }
